@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<KinBody name="Target">
+  <Body name="body" type="static">
+    <Translation>0 0 0</Translation>
+    <Geom type="trimesh">
+      <data>hydrant.wrl 0.001</data>
+      <Render>hydrant.wrl 0.001</Render>
+    </Geom>
+  </Body>
+</KinBody>

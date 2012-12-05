@@ -1,0 +1,10 @@
+<KinBody name="hose">
+  <Body name="hose" type="dynamic">
+    <Geom type="cylinder">
+      <rotationaxis>1 0 0 90</rotationaxis>
+      <radius>0.022225</radius>
+      <height>0.3</height>
+      <diffuseColor>0.9 0.9 0.9</diffuseColor>
+    </Geom>
+  </Body>
+</KinBody>
