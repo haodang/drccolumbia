@@ -21,7 +21,7 @@ if __name__ == "__main__":
         RaveSetDebugLevel(DebugLevel.Debug)
         time.sleep(0.25)
 
-        timestep = 0.0005
+        timestep = 0.0004
         with env:
             #load from an xml file
             env.StopSimulation()
