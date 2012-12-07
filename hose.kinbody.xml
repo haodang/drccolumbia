@@ -1,5 +1,5 @@
 <KinBody name="hose">
-  <Body name="hose" type="dynamic">
+  <Body name="hose" type="static">
     <Geom type="cylinder">
       <rotationaxis>1 0 0 90</rotationaxis>
       <radius>0.022225</radius>

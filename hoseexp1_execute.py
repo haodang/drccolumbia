@@ -88,11 +88,15 @@ if __name__ == "__main__":
         #RunTrajectoryFromFile(robot, planner)
         RunOpenRAVETraj(robot, planner.filename)
         raw_input('wait until trajector is done and click enter')
-        CloseLeftHand(robot,pi/3)
-        print hose.GetLinks()[0].GetMass()
-        hose.GetLinks()[0].SetMass(0.0001)
-        print hose.GetLinks()[0].GetMass()
-        #raw_input('wait until hand is closed and click enter')
+
+        #we need to change the time step to get fine simulation results
+        #ode could crash if the timestep is too big
+        env.StopSimulation()
+        env.StartSimulation(0.0001)
+        CloseLeftHand(robot,pi)
+        env.StopSimulation()
+        env.StartSimulation(timestep)
+
         robot.SetActiveManipulator('leftArm')
         robot.SmartGrab(hose)
         RunOpenRAVETraj(robot, 'moveup.txt')
