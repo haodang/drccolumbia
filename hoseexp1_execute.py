@@ -18,7 +18,7 @@ if __name__ == "__main__":
         env = Environment()
         env.SetViewer('qtcoin')
         #we do not want to print out too many warning messages
-        #RaveSetDebugLevel(DebugLevel.Error)
+        RaveSetDebugLevel(DebugLevel.Debug)
         time.sleep(0.25)
 
         timestep = 0.0005
@@ -73,22 +73,32 @@ if __name__ == "__main__":
         recorder.SendCommand('Start 640 480 30 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
 
         raw_input('wait until the initial pose is achieved and click enter (why should we wait here?)')
+
+        
+        #print hose.GetLinks()[0].GetMass()
+        #hose.GetLinks()[0].SetMass(0.0001)
+        #print hose.GetLinks()[0].GetMass()
+        #robot.SetActiveManipulator('leftArm')
+        #robot.Grab(hose)
+        #robot.ReleaseAllGrabbed()
+
+
         planner = Cbirrt(prob_cbirrt)
         planner.filename='grasphose.txt'
         #RunTrajectoryFromFile(robot, planner)
         RunOpenRAVETraj(robot, planner.filename)
         raw_input('wait until trajector is done and click enter')
-        #CloseRightHand(robot)
-        #print hose.GetLinks()[0].GetMass()
-        #hose.GetLinks()[0].SetMass(0)
-        #print hose.GetLinks()[0].GetMass()
+        CloseLeftHand(robot,pi/3)
+        print hose.GetLinks()[0].GetMass()
+        hose.GetLinks()[0].SetMass(0.0001)
+        print hose.GetLinks()[0].GetMass()
         #raw_input('wait until hand is closed and click enter')
-        #robot.SetActiveManipulator('rightArm')
-        #robot.Grab(hose)
+        robot.SetActiveManipulator('leftArm')
+        robot.SmartGrab(hose)
         RunOpenRAVETraj(robot, 'moveup.txt')
         raw_input('wait until trajector is done and click enter')
         planner.filename='attachhose.txt'
-        #RunTrajectoryFromFile(robot, planner)
+        
         RunOpenRAVETraj(robot, planner.filename)
         raw_input('wait until trajector is done and click enter')
         RunOpenRAVETraj(robot, 'insert.txt')
