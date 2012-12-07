@@ -21,7 +21,7 @@ if __name__ == "__main__":
         env.SetDebugLevel(DebugLevel.Debug)
         time.sleep(0.25)
 
-        timestep = 0.0002
+        timestep = 0.0004
         with env:
             #load from an xml file
             env.StopSimulation()
