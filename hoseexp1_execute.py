@@ -21,7 +21,7 @@ if __name__ == "__main__":
         RaveSetDebugLevel(DebugLevel.Debug)
         time.sleep(0.25)
 
-        timestep = 0.00045
+        timestep = 0.0005
         with env:
             #load from an xml file
             env.StopSimulation()
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         #we need to change the time step to get fine simulation results
         #ode could crash if the timestep is too big
         env.StopSimulation()
-        env.StartSimulation(0.0005)
+        env.StartSimulation(0.0001)
         CloseLeftHand(robot,pi)
         env.StopSimulation()
         env.StartSimulation(timestep)
