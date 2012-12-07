@@ -74,7 +74,8 @@ if __name__ == "__main__":
 
         raw_input('wait until the initial pose is achieved and click enter (why should we wait here?)')
 
-        
+
+        #test code to see how grab affects the trajectory controller
         #print hose.GetLinks()[0].GetMass()
         #hose.GetLinks()[0].SetMass(0.0001)
         #print hose.GetLinks()[0].GetMass()
@@ -92,7 +93,7 @@ if __name__ == "__main__":
         #we need to change the time step to get fine simulation results
         #ode could crash if the timestep is too big
         env.StopSimulation()
-        env.StartSimulation(0.0001)
+        env.StartSimulation(0.0005)
         CloseLeftHand(robot,pi)
         env.StopSimulation()
         env.StartSimulation(timestep)

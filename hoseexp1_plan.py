@@ -20,7 +20,7 @@ mGraspInHoseLeftHand = array([[ 0, -1,  0, -0.025],
 
 mHoseInHydrant = array([[ 1, 0,  0, 0],
                        [ 0, 1,  0, 0],
-                       [ 0, 0,  1, -0.3],
+                       [ 0, 0,  1, -0.2],
                        [ 0, 0,  0,  1.0000]])
 
 
@@ -115,7 +115,7 @@ def moveHandUp(env, basemanip, robot, dist, filename):
         print 'not loaded, auto generate'
         ikmodel.autogenerate()
 
-    stepsize = 0.01
+    stepsize = 0.001
     traj = basemanip.MoveHandStraight(direction=[0,0,1],
                                       stepsize=stepsize,
                                       minsteps=1,
@@ -123,6 +123,7 @@ def moveHandUp(env, basemanip, robot, dist, filename):
                                       execute=False,
                                       outputtraj=True,
                                       outputtrajobj=True)
+    planningutils.RetimeTrajectory(traj, False, 0.1, 0.1)
     writeToFile(filename,traj.serialize())
     robot.GetController().SetPath(traj)
     robot.WaitForController(0)
@@ -134,14 +135,15 @@ def insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist):
     if not ikmodel.load():
         print 'not loaded, auto generate'
         ikmodel.autogenerate()
-    stepsize = 0.01
+    stepsize = 0.001
     traj = basemanip.MoveHandStraight(direction=[0,0,1],
                                       stepsize=stepsize,
                                       minsteps=1,
-                                      maxsteps=40,
+                                      maxsteps=dist/stepsize,
                                       execute=False,
                                       outputtraj=True,
-                                      outputtrajobj='moveup.txt')
+                                      outputtrajobj='insert.txt')
+    planningutils.RetimeTrajectory(traj, False, 0.1,0.1)
     writeToFile('insert.txt',traj.serialize())
     robot.GetController().SetPath(traj)
     robot.WaitForController(0)
@@ -267,7 +269,7 @@ if __name__ == "__main__":
         attachHoseToHydrant(env, prob_cbirrt, robot, hydrant_vertical, hose)
 
         #insertion
-        dist = 0.05
+        dist = 0.1
         insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist)
 
         time.sleep(1)
