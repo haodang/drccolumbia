@@ -70,19 +70,9 @@ if __name__ == "__main__":
         env.AddModule(recorder,'')
         filename = 'hoseexp1_execute.mpg'
         codec = 13 # mpeg2
-        recorder.SendCommand('Start 640 480 30 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
+        recorder.SendCommand('Start 640 480 15 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
 
         raw_input('wait until the initial pose is achieved and click enter (why should we wait here?)')
-
-
-        #test code to see how grab affects the trajectory controller
-        #print hose.GetLinks()[0].GetMass()
-        #hose.GetLinks()[0].SetMass(0.0001)
-        #print hose.GetLinks()[0].GetMass()
-        #robot.SetActiveManipulator('leftArm')
-        #robot.Grab(hose)
-        #robot.ReleaseAllGrabbed()
-
 
         planner = Cbirrt(prob_cbirrt)
         planner.filename='grasphose.txt'
@@ -99,7 +89,8 @@ if __name__ == "__main__":
         env.StartSimulation(timestep)
 
         robot.SetActiveManipulator('leftArm')
-        robot.SmartGrab(hose)
+        robot.Grab(hose)
+        
         RunOpenRAVETraj(robot, 'moveup.txt')
         raw_input('wait until trajector is done and click enter')
         planner.filename='attachhose.txt'
