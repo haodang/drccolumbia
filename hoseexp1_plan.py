@@ -8,9 +8,9 @@ import numpy
 import pdb
 from utilities_hao import *
 
-mGraspInHoseRightHand = array([[ 0, 0,  -1, -0.028],
-                               [ -1, 0,  0, 0],
-                               [ 0, 1,  0,  -0.07],
+mGraspInHoseRightHand = array([[ 1, 0,  0, 0],
+                               [ 0, 1,  0, -0.025],
+                               [ 0, 0,  1,  -0.08],
                                [ 0, 0,  0,  1.0000]])
 
 mGraspInHoseLeftHand = array([[ 0, -1,  0, -0.025],
@@ -22,6 +22,7 @@ mHoseInHydrant = array([[ 1, 0,  0, 0],
                        [ 0, 1,  0, 0],
                        [ 0, 0,  1, -0.18],
                        [ 0, 0,  0,  1.0000]])
+
 
 armName = ['leftArm', 'rightArm']
 useArm = 1

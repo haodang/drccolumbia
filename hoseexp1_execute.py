@@ -73,15 +73,14 @@ if __name__ == "__main__":
         codec = 13 # mpeg2
         recorder.SendCommand('Start 640 480 15 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
 
-        raw_input('wait until the initial pose is achieved and click enter (why should we wait here?)')
+        #raw_input('wait until the initial pose is achieved and click enter (why should we wait here?)')
 
 
         planner = Cbirrt(prob_cbirrt)
         planner.filename='grasphose.txt'
         #RunTrajectoryFromFile(robot, planner)
         RunOpenRAVETraj(robot, planner.filename)
-        #printOutJoints(robot)
-        raw_input('wait until trajector is done and click enter')
+        #raw_input('wait until trajector is done and click enter')
 
         #we need to change the time step to get fine simulation results
         #ode could crash if the timestep is too big
@@ -95,15 +94,15 @@ if __name__ == "__main__":
         robot.Grab(hose)
 
         RunOpenRAVETraj(robot, 'moveup.txt')
-        raw_input('wait until trajector is done and click enter')
+        #raw_input('wait until trajector is done and click enter')
         planner.filename='attachhose.txt'
 
         RunOpenRAVETraj(robot, planner.filename)
-        raw_input('wait until trajector is done and click enter')
+        #raw_input('wait until trajector is done and click enter')
         RunOpenRAVETraj(robot, 'insert.txt')
-        raw_input('wait until trajector is done and click enter')
-        #printOutJoints(robot)
-
+        #raw_input('wait until trajector is done and click enter')
+        
+            
         raw_input('enter to exit')
         recorder.SendCommand('Stop')
     finally:

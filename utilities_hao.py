@@ -98,6 +98,8 @@ def autoGrasp(env,robot,hand=0):
         #pdb.set_trace()
 
             
+
+    
 def getHandInObject(env, robot, object, arm):
     with env:
         handInWorld = robot.GetManipulators()[arm].GetEndEffectorTransform()
@@ -131,6 +133,7 @@ def RunOpenRAVETraj(robot, filename):
     controller.SetPath(traj)
     controller.SendCommand('start')
     robot.WaitForController(0)
+
 
 
 '''convert a trajectory from OpenRAVE format to Hubo format'''
