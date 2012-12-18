@@ -1,6 +1,19 @@
 from planning import *
 
+lArmDOFs = [14,16,18,20,22,24]
+rArmDOFs = [13,15,17,19,21,23]
+lHandDOFs = [42,43,44, 45,46,47, 48,49,50, 51,52,53, 54,55,56]
+rHandDOFs = [27,28,29, 30,31,32, 33,34,35, 36,37,38, 39,40,41]
 
+def printJointValues(robot, arm = 'LeftArm'):
+    if arm == 'LeftArm':
+        dofs = lArmDOFs
+    else:
+        dofs = rArmDOFs
+    with robot:
+        joints = robot.GetActiveDOFValues()
+    print "%d %d %d %d %d %d\n"%(joints[dof[0]], joints[dof[1]], joints[dof[2]], joints[dof[3]], joints[dof[4]], joints[dof[5]])
+    
 def getHandInObject(env, robot, object, arm):
     with env:
         handInWorld = robot.GetManipulators()[arm].GetEndEffectorTransform()
@@ -33,6 +46,10 @@ def RunOpenRAVETraj(robot, filename):
     controller = robot.GetController()
     controller.SetPath(traj)
     controller.SendCommand('start')
+
+    while(controller.IsDone() == False):
+        time.sleep(0.01)
+        print "waiting"
 
 '''convert a trajectory from OpenRAVE format to Hubo format'''
 def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
