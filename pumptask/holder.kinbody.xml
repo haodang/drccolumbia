@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<KinBody name="Target">
+  <!--<RotationAxis>1 0 0 90</RotationAxis>-->
+  <Body name="body" type="dynamic">
+    <Translation>0 0 0</Translation>
+    <Geom type="trimesh">
+      <data>holder.wrl 0.001</data>
+      <Render>holder.wrl 0.001</Render>
+    </Geom>
+  </Body>
+</KinBody>
