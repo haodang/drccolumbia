@@ -7,6 +7,7 @@ import time
 import numpy
 import pdb
 import sys
+from utilities_hao import *
 
 def setToInit(basemanip,robot):
 
@@ -92,7 +93,8 @@ if __name__ == "__main__":
 
         prob_cbirrt.SendCommand('traj grasphose.txt')
         robot.WaitForController(0)
-        print hose.GetTransform()
+        #printOutJoints(robot)
+        #print hose.GetTransform()
         #prob_cbirrt.SendCommand('GrabBody name hose')
         robot.SetActiveManipulator(activeArm) #'rightArm'/'leftArm'
         robot.Grab(hose)
@@ -103,7 +105,7 @@ if __name__ == "__main__":
         prob_cbirrt.SendCommand('traj insert.txt')
         robot.WaitForController(0)
 
-
+        #printOutJoints(robot)
         raw_input('enter to exit')
         
     finally:

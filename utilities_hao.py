@@ -1,5 +1,28 @@
 from planning import *
+import pdb
 
+lArmDOFs = [14,16,18,20,22,24]
+rArmDOFs = [13,15,17,19,21,23]
+lHandDOFs = [42,43,44, 45,46,47, 48,49,50, 51,52,53, 54,55,56]
+rHandDOFs = [27,28,29, 30,31,32, 33,34,35, 36,37,38, 39,40,41]
+
+def printOutJoints(robot, index = 0):
+    if index == 1:
+        dofs = rArmDOFs
+    else:
+        dofs = lArmDOFs
+    jnts = robot.GetJoints()
+    for i in dofs:
+        #pdb.set_trace()
+        print "joint %s: %s, [%s, %s]"%(jnts[i].GetName(),jnts[i].GetValues()[0],jnts[i].GetLimits()[0],jnts[i].GetLimits()[1])
+    
+def padJointLimits(robot, margin = 0.03):
+    for j in robot.GetJoints():
+        [lower,upper]=j.GetLimits()
+        print j.GetName() + " old limits are [{}, {}]".format(lower[0],upper[0])
+        j.SetLimits(lower+margin,upper-margin)
+        [lower_new,upper_new]=j.GetLimits()
+        print j.GetName() + " new limits are [{}, {}]".format(lower_new[0],upper_new[0])
 
 def getHandInObject(env, robot, object, arm):
     with env:
@@ -33,6 +56,8 @@ def RunOpenRAVETraj(robot, filename):
     controller = robot.GetController()
     controller.SetPath(traj)
     controller.SendCommand('start')
+    robot.WaitForController(0)
+
 
 '''convert a trajectory from OpenRAVE format to Hubo format'''
 def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):

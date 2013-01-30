@@ -6,7 +6,7 @@ from rodrigues import *
 import time
 import numpy
 import pdb
-
+from utilities_hao import *
 
 mGraspInHoseRightHand = array([[ 1, 0,  0, 0],
                                [ 0, 1,  0, -0.025],
@@ -23,11 +23,6 @@ mHoseInHydrant = array([[ 1, 0,  0, 0],
                        [ 0, 0,  1, -0.2],
                        [ 0, 0,  0,  1.0000]])
 
-
-lArmDOFs = [14,16,18,20,22,24]
-rArmDOFs = [13,15,17,19,21,23]
-lHandDOFs = [42,43,44, 45,46,47, 48,49,50, 51,52,53, 54,55,56]
-rHandDOFs = [27,28,29, 30,31,32, 33,34,35, 36,37,38, 39,40,41]
 armName = ['leftArm', 'rightArm']
 useArm = 0
 
@@ -60,7 +55,7 @@ def setToInit(basemanip,robot):
     goal[41] = 0
  
     robot.SetActiveDOFValues( goal )
-
+    
 def openHand(robot, index = 1):
     #pdb.set_trace()
     if index == 1:
@@ -115,15 +110,17 @@ def moveHandUp(env, basemanip, robot, dist, filename):
         print 'not loaded, auto generate'
         ikmodel.autogenerate()
 
-    stepsize = 0.001
-    traj = basemanip.MoveHandStraight(direction=[0,0,1],
-                                      stepsize=stepsize,
-                                      minsteps=1,
-                                      maxsteps=dist/stepsize,
-                                      execute=False,
-                                      outputtraj=True,
-                                      outputtrajobj=True)
-    planningutils.RetimeTrajectory(traj, False, 0.1, 0.1)
+    with robot:
+        stepsize = 0.001
+        traj = basemanip.MoveHandStraight(direction=[0,0,1],
+                                          stepsize=stepsize,
+                                          minsteps=1,
+                                          maxsteps=dist/stepsize,
+                                          execute=False,
+                                          outputtraj=True,
+                                          outputtrajobj=True)
+        planningutils.RetimeTrajectory(traj, False, 0.1, 0.1)
+        
     writeToFile(filename,traj.serialize())
     robot.GetController().SetPath(traj)
     robot.WaitForController(0)
@@ -135,15 +132,18 @@ def insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist):
     if not ikmodel.load():
         print 'not loaded, auto generate'
         ikmodel.autogenerate()
-    stepsize = 0.001
-    traj = basemanip.MoveHandStraight(direction=[0,0,1],
-                                      stepsize=stepsize,
-                                      minsteps=1,
-                                      maxsteps=dist/stepsize,
-                                      execute=False,
-                                      outputtraj=True,
-                                      outputtrajobj='insert.txt')
-    planningutils.RetimeTrajectory(traj, False, 0.1,0.1)
+
+    with robot:
+        stepsize = 0.001
+        traj = basemanip.MoveHandStraight(direction=[0,0,1],
+                                          stepsize=stepsize,
+                                          minsteps=1,
+                                          maxsteps=dist/stepsize,
+                                          execute=False,
+                                          outputtraj=True,
+                                          outputtrajobj='insert.txt')
+        planningutils.RetimeTrajectory(traj, False, 0.1,0.1)
+        
     writeToFile('insert.txt',traj.serialize())
     robot.GetController().SetPath(traj)
     robot.WaitForController(0)
@@ -169,6 +169,7 @@ def moveCBiRRT(env, prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, armIndex):
         resp = prob_cbirrt.SendCommand('RunCBiRRT filename %s timelimit 30 psample 0.25 %s'%(filename,TSRChainString))
     prob_cbirrt.SendCommand('traj %s'%(filename))
     robot.WaitForController(0)
+
 
 '''not correctly'''
 def moveStraight(env, prob_manip, robot, filename, armIndex = 0):
@@ -253,6 +254,8 @@ if __name__ == "__main__":
         setToInit(basemanip, robot)
         time.sleep(1)
 
+        padJointLimits(robot, 0.06)
+        
         recorder = RaveCreateModule(env,'viewerrecorder')
         env.AddModule(recorder,'')
         filename = 'hoseexp1_plan.mpg'

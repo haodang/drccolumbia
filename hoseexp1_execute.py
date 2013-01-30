@@ -55,7 +55,7 @@ if __name__ == "__main__":
             #Set an initial pose before the simulation starts
             ind = openhubo.makeNameToIndexConverter(robot)
             robot.SetDOFValues([pi/8,-pi/8],[ind('LSR'),ind('RSR')])
-            controller.SendCommand('set gains 50 1 5 .9998 .1')
+            controller.SendCommand('set gains 10 1 5 .9998 .1')
 
             #Use the new SetDesired command to set a whole pose at once.
             pose=array(zeros(60))
@@ -78,6 +78,7 @@ if __name__ == "__main__":
         planner.filename='grasphose.txt'
         #RunTrajectoryFromFile(robot, planner)
         RunOpenRAVETraj(robot, planner.filename)
+        #printOutJoints(robot)
         raw_input('wait until trajector is done and click enter')
 
         #we need to change the time step to get fine simulation results
@@ -92,14 +93,14 @@ if __name__ == "__main__":
         robot.Grab(hose)
         
         RunOpenRAVETraj(robot, 'moveup.txt')
-        raw_input('wait until trajector is done and click enter')
+        #raw_input('wait until trajector is done and click enter')
         planner.filename='attachhose.txt'
         
         RunOpenRAVETraj(robot, planner.filename)
-        raw_input('wait until trajector is done and click enter')
+        #raw_input('wait until trajector is done and click enter')
         RunOpenRAVETraj(robot, 'insert.txt')
-        raw_input('wait until trajector is done and click enter')
-        
+        #raw_input('wait until trajector is done and click enter')
+        #printOutJoints(robot)
             
         raw_input('enter to exit')
         recorder.SendCommand('Stop')        

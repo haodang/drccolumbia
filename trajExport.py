@@ -9,7 +9,7 @@ import pdb
 from utilities_hao import *
 
 if __name__ == "__main__":
-'''export an OpenRAVE trajectory to Hubo format'''
+    '''export an OpenRAVE trajectory to Hubo format'''
 
     try:
 
