@@ -8,23 +8,23 @@ import numpy
 import pdb
 from utilities_hao import *
 
-mGraspInHoseRightHand = array([[ 1, 0,  0, 0],
-                               [ 0, 1,  0, -0.025],
-                               [ 0, 0,  1,  -0.08],
+mGraspInHoseRightHand = array([[ 0, 0,  -1, -0.028],
+                               [ -1, 0,  0, 0],
+                               [ 0, 1,  0,  -0.07],
                                [ 0, 0,  0,  1.0000]])
 
 mGraspInHoseLeftHand = array([[ 0, -1,  0, -0.025],
                               [ 1, 0,  0, 0],
-                              [ 0, 0,  1,  -0.08],
+                              [ 0, 0,  1,  -0.07],
                               [ 0, 0,  0,  1.0000]])
 
 mHoseInHydrant = array([[ 1, 0,  0, 0],
                        [ 0, 1,  0, 0],
-                       [ 0, 0,  1, -0.2],
+                       [ 0, 0,  1, -0.18],
                        [ 0, 0,  0,  1.0000]])
 
 armName = ['leftArm', 'rightArm']
-useArm = 0
+useArm = 1
 
 def writeToFile(filename, string):
     f = open(filename, 'w')
@@ -37,22 +37,22 @@ def setToInit(basemanip,robot):
     goal = [0]*len(j)
 
     #left
-    goal[14] = 0
-    goal[16] = pi/2
-    goal[18] = 0
-    goal[20] = 0
-    goal[22] = 0
-    goal[24] = 0
-    goal[56] = 0
+    goal[1] = 0
+    goal[2] = 0
+    goal[3] = 0
+    goal[4] = 0
+    goal[5] = 0
+    goal[6] = 0
+    goal[7] = 0
 
     #right
-    goal[13] = 0
-    goal[15] = -pi/2
-    goal[17] = 0
     goal[19] = 0
+    goal[20] = 0
     goal[21] = 0
+    goal[22] = 0
     goal[23] = 0
-    goal[41] = 0
+    goal[24] = 0
+    goal[25] = 0
  
     robot.SetActiveDOFValues( goal )
     
@@ -204,8 +204,11 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
         graspInHose = mGraspInHoseLeftHand
     else:
         graspInHose = mGraspInHoseRightHand
+    #pdb.set_trace()
     graspInWorld = numpy.dot(hoseInWorld, graspInHose)
     robot.GetManipulators()[useArm].GetEndEffector().SetTransform(graspInWorld)
+    #print graspInWorld
+    #raw_input("check")
 
     Bw = mat([0.0, 0.0,
               0.0, 0.0,
@@ -219,6 +222,8 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     moveCBiRRT(env, prob_cbirrt, robot, 'grasphose.txt', T0_w, Tw_e, Bw, useArm)
     robot.SetActiveManipulator(armName[useArm])
     robot.Grab(hose)
+    objName = "hose"
+    prob_cbirrt.SendCommand('GrabBody name %s'%(objName))
 
 if __name__ == "__main__":
 
@@ -237,7 +242,7 @@ if __name__ == "__main__":
         hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
         hydrant_vertical = env.GetKinBody('hydrant_vertical')
         hose = env.GetKinBody('hose')
-        robot = env.GetRobot('huboplus')
+        robot = env.GetRobot('drchubo')
         bullet = RaveCreateCollisionChecker(env,'bullet')
         ode = RaveCreateCollisionChecker(env,'ode')
         env.SetCollisionChecker(ode)
@@ -246,12 +251,12 @@ if __name__ == "__main__":
 
         #create problem instances
         prob_cbirrt = RaveCreateProblem(env,'CBiRRT')
-        env.LoadProblem(prob_cbirrt,'huboplus')
+        env.LoadProblem(prob_cbirrt,'drchubo')
 
         prob_manip = RaveCreateProblem(env,'Manipulation')
-        env.LoadProblem(prob_manip,'huboplus')
+        env.LoadProblem(prob_manip,'drchubo')
 
-        setToInit(basemanip, robot)
+        #setToInit(basemanip, robot)
         time.sleep(1)
 
         padJointLimits(robot, 0.06)

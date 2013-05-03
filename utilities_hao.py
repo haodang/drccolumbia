@@ -1,10 +1,13 @@
 from planning import *
 import pdb
 
-lArmDOFs = [14,16,18,20,22,24]
-rArmDOFs = [13,15,17,19,21,23]
-lHandDOFs = [42,43,44, 45,46,47, 48,49,50, 51,52,53, 54,55,56]
-rHandDOFs = [27,28,29, 30,31,32, 33,34,35, 36,37,38, 39,40,41]
+# DRC Hubo
+lArmDOFs = [1,2,3,4,5,6,7]
+rArmDOFs = [19,20,21,22,23,24,25]
+lHandDOFs = [8,9,10]
+lHandVels = [1,1,-1]
+rHandDOFs = [26,27,28]
+rHandVels = [1,1,-1]
 
 def printOutJoints(robot, index = 0):
     if index == 1:
@@ -23,6 +26,26 @@ def padJointLimits(robot, margin = 0.03):
         j.SetLimits(lower+margin,upper-margin)
         [lower_new,upper_new]=j.GetLimits()
         print j.GetName() + " new limits are [{}, {}]".format(lower_new[0],upper_new[0])
+
+def closeHand(robot,angle=pi/2,hand=0):
+    ctrl=robot.GetController()
+
+    if hand == 0:
+        fingers=lHandDOFs
+        vels = lHandVels
+    else:
+        fingers=rHandDOFs
+        vels = rHandVels
+    pose = robot.GetDOFValues()
+    i = 0
+    for k in fingers:
+        pose[k]=angle * vels[i]
+        i = i + 1
+    ctrl.SetDesired(pose)
+    time.sleep(1)
+    return True
+    
+
 
 def getHandInObject(env, robot, object, arm):
     with env:
