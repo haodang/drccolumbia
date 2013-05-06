@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <KinBody name="Target">
+    <modelsdir>models</modelsdir>
   <Body name="body" type="static">
     <Translation>0 0 0</Translation>
     <Geom type="trimesh">
