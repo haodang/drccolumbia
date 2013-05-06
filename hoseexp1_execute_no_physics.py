@@ -49,12 +49,12 @@ def setToInit(basemanip,robot):
     goal[21] = 0
     goal[23] = 0
     goal[41] = 0
- 
+
     robot.SetActiveDOFValues( goal )
 
 
 if __name__ == "__main__":
-    
+
     if len(sys.argv) < 2:
         print 'please input the active arm index'
         exit
@@ -68,9 +68,9 @@ if __name__ == "__main__":
         viewer.SetSize(640,480)
         #we do not want to print out too many warning messages
         #RaveSetDebugLevel(DebugLevel.Error)
-        
+
         #load from an xml file
-        env.Load('hoseexp1_plan.env.xml')
+        env.Load('scenes/hoseexp1_plan.env.xml')
         hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
         hydrant_vertical = env.GetKinBody('hydrant_vertical')
         hose = env.GetKinBody('hose')
@@ -107,6 +107,6 @@ if __name__ == "__main__":
 
         #printOutJoints(robot)
         raw_input('enter to exit')
-        
+
     finally:
         env.Destroy()

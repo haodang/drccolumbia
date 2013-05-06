@@ -25,7 +25,7 @@ if __name__ == "__main__":
         with env:
             #load from an xml file
             env.StopSimulation()
-            env.Load('hoseexp1_physics.env.xml')
+            env.Load('scenes/hoseexp1_physics.env.xml')
             time.sleep(0.25)
 
             hydrant_horizontal = env.GetKinBody('hydrant_horizontal')

@@ -509,7 +509,7 @@ if __name__ == "__main__":
         #RaveSetDebugLevel(DebugLevel.Error)
 
         #load from an xml file
-        env.Load('pump_task.env.xml')
+        env.Load('scenes/pump_task.env.xml')
         pump_old = env.GetKinBody('pump_old')
         pump_new = env.GetKinBody('pump_new')
         wrench = env.GetKinBody('wrench')
