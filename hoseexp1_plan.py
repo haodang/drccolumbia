@@ -220,6 +220,9 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     Tw_e = MakeTransform(graspInHose[0:3,0:3], numpy.mat(graspInHose[0:3,3]).T)
 
     moveCBiRRT(env, prob_cbirrt, robot, 'grasphose.txt', T0_w, Tw_e, Bw, useArm)
+
+    autoGrasp(env, robot, 1)
+            
     robot.SetActiveManipulator(armName[useArm])
     robot.Grab(hose)
     objName = "hose"

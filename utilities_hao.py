@@ -5,8 +5,10 @@ import pdb
 lArmDOFs = [1,2,3,4,5,6,7]
 rArmDOFs = [19,20,21,22,23,24,25]
 lHandDOFs = [8,9,10]
+lHandLinks = [10,11,12]
 lHandVels = [1,1,-1]
 rHandDOFs = [26,27,28]
+rHandLinks = [30,31,32]
 rHandVels = [1,1,-1]
 
 def printOutJoints(robot, index = 0):
@@ -45,8 +47,57 @@ def closeHand(robot,angle=pi/2,hand=0):
     time.sleep(1)
     return True
     
+def autoGrasp(env,robot,hand=0):
+    s = 0.1
+    e = 0.001
+    startoffsets = [s,s,s]
+    endoffsets = [e,e,e]
 
+    if hand == 0:
+        fingers=lHandDOFs
+        linkIndices=lHandLinks
+        vels = lHandVels
+    else:
+        fingers=rHandDOFs
+        linkIndices=rHandLinks
+        vels = rHandVels
+    pose = robot.GetDOFValues()
+    
+    keepmoving = True
+    offsets = startoffsets
+    while(keepmoving):
+        #close the fingers by offsets
+        for i in range(3):
+            pose[fingers[i]] = pose[fingers[i]] + offsets[i] * vels[i]
+        robot.SetDOFValues(pose)
+    
+        #check collision
+        report = CollisionReport()
+        collide=[0,0,0]
+        links = robot.GetLinks()
+        for i in range(3):
+            collision = env.CheckCollision(links[linkIndices[i]], report=report)
+            if collision:#len(report.contacts) > 0:
+                collide[i] = 1
+        
+        #move back and modify the offset
+        for i in range(3):
+            if collide[i] == 1:
+                pose[fingers[i]] = pose[fingers[i]] - offsets[i] * vels[i]
+                offsets[i] = offsets[i] / 2
 
+        #check below threshold
+        total = 0
+        for i in range(3):
+            if offsets[i] < endoffsets[i]:
+                total = total + 1
+        if total == 3:
+            keepmoving = False
+        time.sleep(0.01)
+        #print 'going'
+        #pdb.set_trace()
+
+            
 def getHandInObject(env, robot, object, arm):
     with env:
         handInWorld = robot.GetManipulators()[arm].GetEndEffectorTransform()
