@@ -1,15 +1,23 @@
-from planning import *
-import pdb
+import time
+import numpy as np
+
+from numpy import pi
+from openhubo import planning
+from openravepy import RaveCreateTrajectory,planningutils,CollisionReport
 
 # DRC Hubo
 lArmDOFs = [1,2,3,4,5,6,7]
 rArmDOFs = [19,20,21,22,23,24,25]
 lHandDOFs = [8,9,10]
-lHandLinks = [10,11,12]
 lHandVels = [1,1,-1]
 rHandDOFs = [26,27,28]
-rHandLinks = [30,31,32]
 rHandVels = [1,1,-1]
+
+# Hubo+ ?
+#lArmDOFs = [14,16,18,20,22,24]
+#rArmDOFs = [13,15,17,19,21,23]
+#lHandDOFs = [42,43,44, 45,46,47, 48,49,50, 51,52,53, 54,55,56]
+#rHandDOFs = [27,28,29, 30,31,32, 33,34,35, 36,37,38, 39,40,41]
 
 def printOutJoints(robot, index = 0):
     if index == 1:
@@ -20,7 +28,7 @@ def printOutJoints(robot, index = 0):
     for i in dofs:
         #pdb.set_trace()
         print "joint %s: %s, [%s, %s]"%(jnts[i].GetName(),jnts[i].GetValues()[0],jnts[i].GetLimits()[0],jnts[i].GetLimits()[1])
-    
+
 def padJointLimits(robot, margin = 0.03):
     for j in robot.GetJoints():
         [lower,upper]=j.GetLimits()
@@ -46,7 +54,7 @@ def closeHand(robot,angle=pi/2,hand=0):
     ctrl.SetDesired(pose)
     time.sleep(1)
     return True
-    
+
 def autoGrasp(env,robot,hand=0):
     s = 0.1
     e = 0.001
@@ -62,7 +70,6 @@ def autoGrasp(env,robot,hand=0):
         linkIndices=rHandLinks
         vels = rHandVels
     pose = robot.GetDOFValues()
-    
     keepmoving = True
     offsets = startoffsets
     while(keepmoving):
@@ -70,7 +77,6 @@ def autoGrasp(env,robot,hand=0):
         for i in range(3):
             pose[fingers[i]] = pose[fingers[i]] + offsets[i] * vels[i]
         robot.SetDOFValues(pose)
-    
         #check collision
         report = CollisionReport()
         collide=[0,0,0]
@@ -79,7 +85,6 @@ def autoGrasp(env,robot,hand=0):
             collision = env.CheckCollision(links[linkIndices[i]], report=report)
             if collision:#len(report.contacts) > 0:
                 collide[i] = 1
-        
         #move back and modify the offset
         for i in range(3):
             if collide[i] == 1:
@@ -97,14 +102,20 @@ def autoGrasp(env,robot,hand=0):
         #print 'going'
         #pdb.set_trace()
 
-            
 
-    
+def printJointValues(robot, arm = 'LeftArm'):
+    if arm == 'LeftArm':
+        dofs = lArmDOFs
+    else:
+        dofs = rArmDOFs
+    with robot:
+        joints = robot.GetActiveDOFValues()
+
 def getHandInObject(env, robot, object, arm):
     with env:
         handInWorld = robot.GetManipulators()[arm].GetEndEffectorTransform()
         objectInWorld = object.GetTransform()
-        handInObject = numpy.dot( numpy.linalg.inv(objectInWorld), handInWorld )
+        handInObject = np.dot( np.linalg.inv(objectInWorld), handInWorld )
     return handInObject
 
 def loadOpenRAVETrajFromFile(robot, filename):
@@ -114,7 +125,7 @@ def loadOpenRAVETrajFromFile(robot, filename):
 
     traj=RaveCreateTrajectory(robot.GetEnv(),'')
     traj.deserialize(trajstring)
-    
+
     planningutils.RetimeActiveDOFTrajectory(traj,robot,True)
 
     return traj
@@ -135,9 +146,12 @@ def RunOpenRAVETraj(robot, filename):
     robot.WaitForController(0)
 
 
+    while(controller.IsDone() == False):
+        time.sleep(0.01)
+        print "waiting"
 
-'''convert a trajectory from OpenRAVE format to Hubo format'''
 def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
+    """convert a trajectory from OpenRAVE format to Hubo format"""
     f = open(filein, 'r')
     trajstring = f.read()
     f.close()
@@ -145,10 +159,10 @@ def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
     traj = RaveCreateTrajectory(robot.GetEnv(), '')
     traj.deserialize(trajstring)
 
-    '''Start to output the trajectory'''
+    """Start to output the trajectory"""
     outputfile = open(fileout,'w')
 
-    '''The header'''
+    """The header"""
     conf = traj.GetConfigurationSpecification()
     jointGroup = conf.GetGroupFromName('joint_values')
     velocityGroup = conf.GetGroupFromName('joint_velocities')
@@ -165,7 +179,7 @@ def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
             outputfile.write(' ')
     outputfile.write('\n')
 
-    '''Output the sign line'''
+    """Output the sign line"""
     for i in range (len(info) - 2):
         outputfile.write('+')
         if i < len(info)-1:
@@ -177,7 +191,7 @@ def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
     jointTraj = list()
     velocityTraj = list()
     deltatimeList = list()
-    '''Collect the joint data'''
+    """Collect the joint data"""
     for i in range(traj.GetNumWaypoints()):
         waypoint = traj.GetWaypoint(i)
         #fill in the jointWaypoint
@@ -195,7 +209,7 @@ def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
     newTraj = sampleTraj(traj, robot, jointIndices, 10)
 
     checkJointTraj(robot, newTraj, jointIndices)
-    
+
     for i in range(len(newTraj)):
         joints = newTraj[i]
         for j in range(len(joints)):
@@ -203,7 +217,7 @@ def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
             if j != len(joints)-1:
                 outputfile.write(' ')
             else:
-                outputfile.write('\n')            
+                outputfile.write('\n')
 
     #print jointTraj
     outputfile.close()
@@ -211,14 +225,14 @@ def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
 
 
 def sampleTraj(traj, robot, jointIndices, executeTime, dt=0.01):
-    env = robot.GetEnv()
+    #env = robot.GetEnv()
     spec=traj.GetConfigurationSpecification() # get the configuration specification of the trajrectory
 
     print 'total simulation time: %s'%(traj.GetDuration())
     numSample = executeTime / dt
     simDt = traj.GetDuration() / numSample
     newTraj = list()
-    
+
     for i in range(int(numSample+1)):
         simTime = simDt * i
         #with env: # have to lock environment since accessing robot
@@ -227,15 +241,15 @@ def sampleTraj(traj, robot, jointIndices, executeTime, dt=0.01):
         robot.SetDOFValues(values)
         newTraj.append(values[jointIndices])
         time.sleep(dt)
-        
+
     return newTraj
 
-'''
-jointTraj - the list of joint trajectory in an array format, the last element in each entry is the delta time
-robot - the robot the traj is running for
-jointIndices - the joint the trajectory is controlling
-'''
 def checkJointTraj(robot, jointTraj, jointIndices, dt = 0.01):
+    """
+    jointTraj - the list of joint trajectory in an array format, the last element in each entry is the delta time
+    robot - the robot the traj is running for
+    jointIndices - the joint the trajectory is controlling
+    """
     print 'checking traj...'
 
     DOFVelocityLimits = robot.GetDOFVelocityLimits()
@@ -249,8 +263,8 @@ def checkJointTraj(robot, jointTraj, jointIndices, dt = 0.01):
 
     velocityTraj = list()
     for i in range(len(jointTraj) - 1): #examine pair <i, i+1>
-        j1 = array(jointTraj[i])
-        j2 = array(jointTraj[i+1])
+        j1 = np.array(jointTraj[i])
+        j2 = np.array(jointTraj[i+1])
         velocityTraj.append( (j2 - j1)/dt )
         if checkLimits(j1, j2, dt, velocityLimits) == False:
                return False
@@ -261,14 +275,14 @@ def checkJointTraj(robot, jointTraj, jointIndices, dt = 0.01):
 
     #accelerationTraj = list()
     #for i in range(len(velocityTraj) - 1): #examine pair <i,i+1>
-    #    v1 = array(velocityTraj[i])
-    #    v2 = array(velocityTraj[i+1])
+    #    v1 = np.array(velocityTraj[i])
+    #    v2 = np.array(velocityTraj[i+1])
     #    accelerationTraj.append( (v2 - v1)/dt )
 
-'''
-check the derivative between d2 and d1
-'''
 def checkLimits(d1, d2, dt, limit):
+    """
+    check the derivative between d2 and d1
+    """
     for i in range(len(d1)):
         val = abs( (d2[i] - d1[i])/dt )
         if val > limit[i]:

@@ -70,11 +70,10 @@ if __name__ == "__main__":
         #RaveSetDebugLevel(DebugLevel.Error)
 
         #load from an xml file
-        env.Load('scenes/hoseexp1_plan.env.xml')
+        env.Load('scenes/hoseexp1.env.xml')
         hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
         hydrant_vertical = env.GetKinBody('hydrant_vertical')
         hose = env.GetKinBody('hose')
-        robot = env.GetRobot('huboplus')
         bullet = RaveCreateCollisionChecker(env,'bullet')
         ode = RaveCreateCollisionChecker(env,'ode')
         env.SetCollisionChecker(ode)
