@@ -30,33 +30,6 @@ def writeToFile(filename, string):
     f.write(string)
     f.close()
 
-def setToInit(basemanip,robot):
-
-    j = robot.GetActiveDOFValues()
-    goal = [0]*len(j)
-
-    #left
-    goal[1] = 0
-    goal[2] = 0
-    goal[3] = 0
-    goal[4] = 0
-    goal[5] = 0
-    goal[6] = 0
-    goal[7] = 0
-
-    #right
-    goal[19] = 0
-    goal[20] = 0
-    goal[21] = 0
-    goal[22] = 0
-    goal[23] = 0
-    goal[24] = 0
-    goal[25] = 0
- 
-    goal[41] = 0
-
-    robot.SetActiveDOFValues( goal )
-
 def openHand(robot, index = 1):
     #pdb.set_trace()
     if index == 1:
@@ -169,15 +142,15 @@ def moveCBiRRT(env, prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, armIndex):
     print tsr,chain
 
     prob=comps.Cbirrt(prob_cbirrt,chain,filename,30)
-    print prob.TSRs
+    print prob.tsr_chains
 
     prob.run()
     if prob.solved:
         prob.playback()
 
 
-'''not correctly'''
 def moveStraight(env, prob_manip, robot, filename, armIndex = 0):
+    #TODO: Fix this function, since it's not correct apparently
     if armIndex == 0:
         activedof = lArmDOFs
     else:
@@ -208,8 +181,9 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
         graspInHose = mGraspInHoseLeftHand
     else:
         graspInHose = mGraspInHoseRightHand
+
     graspInWorld = np.dot(hoseInWorld, graspInHose)
-    robot.GetManipulators()[useArm].GetEndEffector().SetTransform(graspInWorld)
+    #robot.GetManipulators()[useArm].GetEndEffector().SetTransform(graspInWorld)
     #print graspInWorld
     #raw_input("check")
 
@@ -218,7 +192,9 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
           0.0, 0.0,
           0, 0,
           0, 0,
-          -np.pi, np.pi]
+          -np.pi/2, np.pi/2]
+
+    #TODO: use new transform function to avoid this
     T0_w = comps.Transform(hoseInWorld[0:3,0:3], np.mat(hoseInWorld[0:3,3]).T)
     Tw_e = comps.Transform(graspInHose[0:3,0:3], np.mat(graspInHose[0:3,3]).T)
 
@@ -230,30 +206,21 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
 
 if __name__ == "__main__":
 
-
-        
-
-
-
-
-
-        
-
-
-
-
-
-
-        
     (env,options)=openhubo.setup('qtcoin')
     options.scenefile='scenes/hoseexp1.env.xml'
     options.robotfile=None
 
     [robot,ctrl,ind,ghost,recorder]=openhubo.load_scene(env,options)
-    #initialization
+
+    # initialization boilerplate
+    print "Setup goals and transforms"
     hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
     hydrant_vertical = env.GetKinBody('hydrant_vertical')
     hose = env.GetKinBody('hose')
+
+    #Use new pose class to simplify initial pose
+    pose = openhubo.Pose(robot)
+    pose.reset()
 
     basemanip = interfaces.BaseManipulation(robot)
 
@@ -264,11 +231,7 @@ if __name__ == "__main__":
     prob_manip = RaveCreateProblem(env,'Manipulation')
     env.LoadProblem(prob_manip,'huboplus')
 
-    setToInit(basemanip, robot)
-    #time.sleep(1)
-
     #grasp the hose
-    #recorder.start()
     graspHose(env, prob_cbirrt, basemanip, robot, hose)
 
     #move up
@@ -282,4 +245,3 @@ if __name__ == "__main__":
     insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist)
 
     time.sleep(1)
-    recorder.start()
