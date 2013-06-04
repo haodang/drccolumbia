@@ -18,7 +18,7 @@ if __name__ == "__main__":
         env = Environment()
         env.SetViewer('qtcoin')
         #we do not want to print out too many warning messages
-        RaveSetDebugLevel(DebugLevel.Debug)
+        env.SetDebugLevel(DebugLevel.Debug)
         time.sleep(0.25)
 
         timestep = 0.0002
@@ -39,19 +39,20 @@ if __name__ == "__main__":
 
             #collision checking system
             #bullet = RaveCreateCollisionChecker(env,'bullet')
-            ode = RaveCreateCollisionChecker(env,'ode')
+            #Rob: change to pqp from ode because
+            ode = RaveCreateCollisionChecker(env,'pqp')
             env.SetCollisionChecker(ode)
-                
+
             #basemanipulation interface
             #basemanip = interfaces.BaseManipulation(robot)
-        
+
             #create problem instances
             prob_cbirrt = RaveCreateProblem(env,'CBiRRT')
             env.LoadProblem(prob_cbirrt,'drchubo')
-        
+
             #prob_manip = RaveCreateProblem(env,'Manipulation')
             #env.LoadProblem(prob_manip,'huboplus')
-        
+
             #Set an initial pose before the simulation starts
             ind = openhubo.makeNameToIndexConverter(robot)
             robot.SetDOFValues([pi/8,-pi/8],[ind('LSR'),ind('RSR')])
@@ -63,7 +64,7 @@ if __name__ == "__main__":
             pose[ind('RSR')]=-pi/2
             pose[ind('LSR')]=pi/2
             controller.SetDesired(pose)
-        
+
             env.StartSimulation(timestep=timestep)
 
         recorder = RaveCreateModule(env,'viewerrecorder')
@@ -92,18 +93,18 @@ if __name__ == "__main__":
 
         robot.SetActiveManipulator('rightArm')
         robot.Grab(hose)
-        
+
         RunOpenRAVETraj(robot, 'moveup.txt')
         raw_input('wait until trajector is done and click enter')
         planner.filename='attachhose.txt'
-        
+
         RunOpenRAVETraj(robot, planner.filename)
         raw_input('wait until trajector is done and click enter')
         RunOpenRAVETraj(robot, 'insert.txt')
         raw_input('wait until trajector is done and click enter')
         #printOutJoints(robot)
-            
+
         raw_input('enter to exit')
-        recorder.SendCommand('Stop')        
+        recorder.SendCommand('Stop')
     finally:
         env.Destroy()

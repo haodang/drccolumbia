@@ -53,9 +53,9 @@ def setToInit(basemanip,robot):
     goal[23] = 0
     goal[24] = 0
     goal[25] = 0
- 
+
     robot.SetActiveDOFValues( goal )
-    
+
 def openHand(robot, index = 1):
     #pdb.set_trace()
     if index == 1:
@@ -105,7 +105,7 @@ def attachHoseToHydrant(env, prob_cbirrt, robot, hydrant, hose):
 def moveHandUp(env, basemanip, robot, dist, filename):
     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
                                                                 iktype=IkParameterization.Type.Transform6D)
-        
+
     if not ikmodel.load():
         print 'not loaded, auto generate'
         ikmodel.autogenerate()
@@ -120,15 +120,15 @@ def moveHandUp(env, basemanip, robot, dist, filename):
                                           outputtraj=True,
                                           outputtrajobj=True)
         planningutils.RetimeTrajectory(traj, False, 0.1, 0.1)
-        
+
     writeToFile(filename,traj.serialize())
     robot.GetController().SetPath(traj)
     robot.WaitForController(0)
-    
+
 def insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist):
     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
                                                                 iktype=IkParameterization.Type.Transform6D)
-        
+
     if not ikmodel.load():
         print 'not loaded, auto generate'
         ikmodel.autogenerate()
@@ -143,11 +143,11 @@ def insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist):
                                           outputtraj=True,
                                           outputtrajobj='insert.txt')
         planningutils.RetimeTrajectory(traj, False, 0.1,0.1)
-        
+
     writeToFile('insert.txt',traj.serialize())
     robot.GetController().SetPath(traj)
     robot.WaitForController(0)
-    
+
 def moveCBiRRT(env, prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, armIndex):
     if armIndex == 0:
         activedof = lArmDOFs
@@ -157,7 +157,7 @@ def moveCBiRRT(env, prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, armIndex):
 
     #ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
     #                                                            iktype=IkParameterization.Type.Transform6D)
-        
+
     #if not ikmodel.load():
     #    print 'not loaded, auto generate'
     #    ikmodel.autogenerate()
@@ -181,7 +181,7 @@ def moveStraight(env, prob_manip, robot, filename, armIndex = 0):
 
     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
                                                                 iktype=IkParameterization.Type.Transform6D)
-        
+
     if not ikmodel.load():
         print 'not loaded, auto generate'
         ikmodel.autogenerate()
@@ -190,7 +190,7 @@ def moveStraight(env, prob_manip, robot, filename, armIndex = 0):
         resp = prob_manip.SendCommand('MoveHandStraight direction 0 0 1 maxdist 0.05 writetraj moveup.txt')
     prob_manip.SendCommand('traj liftarmtraj.txt')
     robot.WaitForController(0)
-    
+
 def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     global useArm
     global armName
@@ -220,9 +220,6 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     Tw_e = MakeTransform(graspInHose[0:3,0:3], numpy.mat(graspInHose[0:3,3]).T)
 
     moveCBiRRT(env, prob_cbirrt, robot, 'grasphose.txt', T0_w, Tw_e, Bw, useArm)
-
-    autoGrasp(env, robot, 1)
-            
     robot.SetActiveManipulator(armName[useArm])
     robot.Grab(hose)
     objName = "hose"
@@ -230,63 +227,59 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
 
 if __name__ == "__main__":
 
-    try:
 
-        #initialization
-        env = Environment()
-        env.SetViewer('qtcoin')
-        viewer = env.GetViewer()
-        viewer.SetSize(640,480)
-        #we do not want to print out too many warning messages
-        RaveSetDebugLevel(DebugLevel.Info)
-        
-        #load from an xml file
-        env.Load('hoseexp1_plan.env.xml')
-        hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
-        hydrant_vertical = env.GetKinBody('hydrant_vertical')
-        hose = env.GetKinBody('hose')
-        robot = env.GetRobot('drchubo')
-        bullet = RaveCreateCollisionChecker(env,'bullet')
-        ode = RaveCreateCollisionChecker(env,'ode')
-        env.SetCollisionChecker(ode)
+    #initialization
+    env = Environment()
+    env.SetViewer('qtcoin')
+    viewer = env.GetViewer()
+    viewer.SetSize(640,480)
+    #we do not want to print out too many warning messages
+    RaveSetDebugLevel(DebugLevel.Info)
 
-        basemanip = interfaces.BaseManipulation(robot)
+    #load from an xml file
+    env.Load('hoseexp1_plan.env.xml')
+    hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
+    hydrant_vertical = env.GetKinBody('hydrant_vertical')
+    hose = env.GetKinBody('hose')
+    robot = env.GetRobot('drchubo')
+    bullet = RaveCreateCollisionChecker(env,'bullet')
+    ode = RaveCreateCollisionChecker(env,'ode')
+    env.SetCollisionChecker(ode)
 
-        #create problem instances
-        prob_cbirrt = RaveCreateProblem(env,'CBiRRT')
-        env.LoadProblem(prob_cbirrt,'drchubo')
+    basemanip = interfaces.BaseManipulation(robot)
 
-        prob_manip = RaveCreateProblem(env,'Manipulation')
-        env.LoadProblem(prob_manip,'drchubo')
+    #create problem instances
+    prob_cbirrt = RaveCreateProblem(env,'CBiRRT')
+    env.LoadProblem(prob_cbirrt,'drchubo')
 
-        #setToInit(basemanip, robot)
-        time.sleep(1)
+    prob_manip = RaveCreateProblem(env,'Manipulation')
+    env.LoadProblem(prob_manip,'drchubo')
 
-        padJointLimits(robot, 0.06)
-        
-        recorder = RaveCreateModule(env,'viewerrecorder')
-        env.AddModule(recorder,'')
-        filename = 'hoseexp1_plan.mpg'
-        codec = 13 # mpeg2
-        recorder.SendCommand('Start 640 480 30 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
+    #setToInit(basemanip, robot)
+    time.sleep(1)
 
-        #grasp the hose
-        graspHose(env, prob_cbirrt, basemanip, robot, hose)
+    padJointLimits(robot, 0.06)
 
-        #move up
-        moveHandUp(env, basemanip, robot, 0.05, 'moveup.txt')
+    recorder = RaveCreateModule(env,'viewerrecorder')
+    env.AddModule(recorder,'')
+    filename = 'hoseexp1_plan.mpg'
+    codec = 13 # mpeg2
+    recorder.SendCommand('Start 640 480 30 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
+    #grasp the hose
+    graspHose(env, prob_cbirrt, basemanip, robot, hose)
 
-        #move to the hydrant
-        attachHoseToHydrant(env, prob_cbirrt, robot, hydrant_vertical, hose)
+    #move up
+    moveHandUp(env, basemanip, robot, 0.05, 'moveup.txt')
 
-        #insertion
-        dist = 0.1
-        insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist)
+    #move to the hydrant
+    attachHoseToHydrant(env, prob_cbirrt, robot, hydrant_vertical, hose)
 
-        time.sleep(1)
-        recorder.SendCommand('Stop')
+    #insertion
+    dist = 0.1
+    insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist)
 
-        raw_input('enter to exit')
-        
-    finally:
-        env.Destroy()
+    time.sleep(1)
+    recorder.SendCommand('Stop')
+
+    raw_input('enter to exit')
+
