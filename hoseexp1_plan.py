@@ -156,11 +156,11 @@ def moveCBiRRT(env, prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, armIndex):
     robot.SetActiveDOFs(activedof)
 
     #ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
-    #                                                            iktype=IkParameterization.Type.Transform6D)
+                                                                #iktype=IkParameterization.Type.Transform6D)
 
     #if not ikmodel.load():
-    #    print 'not loaded, auto generate'
-    #    ikmodel.autogenerate()
+        #print 'not loaded, auto generate'
+        #ikmodel.autogenerate()
 
     TSRstring = SerializeTSR(armIndex,'NULL',T0_w,Tw_e,Bw)
     TSRChainString = SerializeTSRChain(0,1,0,1,TSRstring,'NULL',[])
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     viewer = env.GetViewer()
     viewer.SetSize(640,480)
     #we do not want to print out too many warning messages
-    RaveSetDebugLevel(DebugLevel.Info)
+    env.SetDebugLevel(DebugLevel.Info)
 
     #load from an xml file
     env.Load('hoseexp1_plan.env.xml')
@@ -242,8 +242,7 @@ if __name__ == "__main__":
     hydrant_vertical = env.GetKinBody('hydrant_vertical')
     hose = env.GetKinBody('hose')
     robot = env.GetRobot('drchubo')
-    bullet = RaveCreateCollisionChecker(env,'bullet')
-    ode = RaveCreateCollisionChecker(env,'ode')
+    ode = RaveCreateCollisionChecker(env,'pqp')
     env.SetCollisionChecker(ode)
 
     basemanip = interfaces.BaseManipulation(robot)
@@ -260,11 +259,11 @@ if __name__ == "__main__":
 
     padJointLimits(robot, 0.06)
 
-    recorder = RaveCreateModule(env,'viewerrecorder')
-    env.AddModule(recorder,'')
-    filename = 'hoseexp1_plan.mpg'
-    codec = 13 # mpeg2
-    recorder.SendCommand('Start 640 480 30 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
+    #recorder = RaveCreateModule(env,'viewerrecorder')
+    #env.AddModule(recorder,'')
+    #filename = 'hoseexp1_plan.mpg'
+    #codec = 13 # mpeg2
+    #recorder.SendCommand('Start 640 480 30 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
     #grasp the hose
     graspHose(env, prob_cbirrt, basemanip, robot, hose)
 
@@ -279,7 +278,7 @@ if __name__ == "__main__":
     insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist)
 
     time.sleep(1)
-    recorder.SendCommand('Stop')
+    #recorder.SendCommand('Stop')
 
     raw_input('enter to exit')
 
