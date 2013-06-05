@@ -11,10 +11,10 @@ mGraspInHoseRightHand = array([[ 1, 0,  0, 0],
                                [ 0, 0,  1,  -0.08],
                                [ 0, 0,  0,  1.0000]])
 
-mGraspInHoseLeftHand = array([[ 0, -1,  0, -0.025],
-                              [ 1, 0,  0, 0],
-                              [ 0, 0,  1,  -0.07],
-                              [ 0, 0,  0,  1.0000]])
+mGraspInHoseLeftHand = array([[ 1, 0,  0, 0],
+                               [ 0, 1,  0, 0.05],
+                               [ 0, 0,  1,  -0.08],
+                               [ 0, 0,  0,  1.0000]])
 
 mHoseInHydrant = array([[ 1, 0,  0, 0],
                        [ 0, 1,  0, 0],
@@ -104,27 +104,10 @@ def insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist):
     robot.WaitForController(0)
 
 def moveCBiRRT(env, prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, armIndex):
-    if armIndex == 0:
-        activedof = lArmDOFs
-    else:
-        activedof = rArmDOFs
-    robot.SetActiveDOFs(activedof)
 
-    #ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
-    #                                                            iktype=IkParameterization.Type.Transform6D)
-
-    #if not ikmodel.load():
-        #print 'not loaded, auto generate'
-        #ikmodel.autogenerate()
-
-    tsr = comps.TSR(T0_w,Tw_e,Bw,armIndex,'NULL',)
-    chain = comps.TSRChain(0,1,0)
-    chain.insertTSR(tsr)
-    print tsr,chain
-
-    prob=comps.Cbirrt(prob_cbirrt,chain,filename,30)
-    print prob.tsr_chains
-
+    prob=comps.Cbirrt(prob_cbirrt,filename=filename)
+    prob.quicksetup(T0_w,Tw_e,Bw,armIndex)
+    openhubo.pause()
     prob.run()
     if prob.solved:
         prob.playback()
@@ -166,14 +149,12 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     else:
         graspInHose = mGraspInHoseRightHand
 
-    #graspInWorld = np.dot(hoseInWorld, graspInHose)
-
     Bw = [0.0, 0.0,
           0.0, 0.0,
-          0.0, 0.0,
+          -0.1, 0.1,
           0, 0,
           0, 0,
-          -np.pi/2, np.pi/2]
+          -np.pi, np.pi]
 
     #TODO: use new transform function to avoid this
     T0_w = comps.Transform(hoseInWorld[0:3,0:3], np.mat(hoseInWorld[0:3,3]).T)
@@ -201,6 +182,7 @@ if __name__ == "__main__":
     hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
     hydrant_vertical = env.GetKinBody('hydrant_vertical')
     hose = env.GetKinBody('hose')
+    hose.Enable(0)
 
     #Use new pose class to simplify initial pose
     pose = openhubo.Pose(robot)
