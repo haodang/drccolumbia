@@ -11,8 +11,9 @@ mGraspInHoseRightHand = array([[ 1, 0,  0, 0],
                                [ 0, 0,  1,  -0.08],
                                [ 0, 0,  0,  1.0000]])
 
-mGraspInHoseLeftHand = array([[ 1, 0,  0, 0],
-                               [ 0, 1,  0, 0.05],
+#Hubo+ Hand location
+mGraspInHoseLeftHand = array([[ 1, 0,  0, 0.0],
+                               [ 0, 1,  0, 0.025],
                                [ 0, 0,  1,  -0.08],
                                [ 0, 0,  0,  1.0000]])
 
