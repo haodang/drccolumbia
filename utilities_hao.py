@@ -2,7 +2,9 @@ import time
 import numpy as np
 
 from numpy import pi
-from openhubo import planning
+#from openhubo import planning
+import openhubo as oh
+from openhubo import hands
 from openravepy import RaveCreateTrajectory,planningutils,CollisionReport
 
 # DRC Hubo
@@ -37,25 +39,9 @@ def padJointLimits(robot, margin = 0.03):
         [lower_new,upper_new]=j.GetLimits()
         print j.GetName() + " new limits are [{}, {}]".format(lower_new[0],upper_new[0])
 
-def closeHand(robot,angle=pi/2,hand=0):
-    ctrl=robot.GetController()
-
-    if hand == 0:
-        fingers=lHandDOFs
-        vels = lHandVels
-    else:
-        fingers=rHandDOFs
-        vels = rHandVels
-    pose = robot.GetDOFValues()
-    i = 0
-    for k in fingers:
-        pose[k]=angle * vels[i]
-        i = i + 1
-    ctrl.SetDesired(pose)
-    time.sleep(1)
-    return True
 
 def autoGrasp(env,robot,hand=0):
+    #TODO: fix this, now working now.
     s = 0.1
     e = 0.001
     startoffsets = [s,s,s]
@@ -102,14 +88,11 @@ def autoGrasp(env,robot,hand=0):
         #print 'going'
         #pdb.set_trace()
 
-
-def printJointValues(robot, arm = 'LeftArm'):
-    if arm == 'LeftArm':
-        dofs = lArmDOFs
-    else:
-        dofs = rArmDOFs
-    with robot:
-        joints = robot.GetActiveDOFValues()
+def printJointValues(robot, arm='leftArm'):
+    if type(arm) == str:
+        print robot.GetManipulator(arm).GetArmJoints()
+    elif type(arm) == int:
+        print robot.GetManipulators()[arm].GetArmJoints()
 
 def getHandInObject(env, robot, object, arm):
     with env:
@@ -185,7 +168,6 @@ def ConvertOpenRAVETraj2HuboTraj(robot, filein, fileout):
         if i < len(info)-1:
             outputfile.write(' ')
     outputfile.write('\n')
-
 
     #initialize the array for the joint trajectory
     jointTraj = list()
@@ -273,12 +255,6 @@ def checkJointTraj(robot, jointTraj, jointIndices, dt = 0.01):
                 return False
     return True
 
-    #accelerationTraj = list()
-    #for i in range(len(velocityTraj) - 1): #examine pair <i,i+1>
-    #    v1 = np.array(velocityTraj[i])
-    #    v2 = np.array(velocityTraj[i+1])
-    #    accelerationTraj.append( (v2 - v1)/dt )
-
 def checkLimits(d1, d2, dt, limit):
     """
     check the derivative between d2 and d1
@@ -289,3 +265,16 @@ def checkLimits(d1, d2, dt, limit):
             print '%s vs. %s achieved %s which exceeds %s'%(d2[i], d1[i], val, limit[i])
             return False
     return True
+
+def writeToFile(filename, string):
+    f = open(filename, 'w')
+    f.write(string)
+    f.close()
+
+def openHand(robot, index = 1):
+    return hands.open_huboplus_hand(robot,index)
+
+def closeHand(robot,angle=pi/2):
+    return hands.close_huboplus_hand(robot,angle)
+
+

@@ -4,7 +4,7 @@ from numpy import pi,array,mat
 import openhubo
 from openhubo import comps
 from openravepy import databases,planningutils,IkParameterization,interfaces,RaveCreateProblem
-from utilities_hao import rHandDOFs,lHandDOFs,lArmDOFs,rArmDOFs
+from utilities_hao import rHandDOFs,lHandDOFs,lArmDOFs,rArmDOFs,writeToFile
 
 mGraspInHoseRightHand = array([[ 1, 0,  0, 0],
                                [ 0, 1,  0, -0.025],
@@ -23,28 +23,7 @@ mHoseInHydrant = array([[ 1, 0,  0, 0],
 
 
 armName = ['leftArm', 'rightArm']
-useArm = 1
-
-def writeToFile(filename, string):
-    f = open(filename, 'w')
-    f.write(string)
-    f.close()
-
-def openHand(robot, index = 1):
-    #pdb.set_trace()
-    if index == 1:
-        robot.SetActiveDOFs(rHandDOFs)
-        dof = [0.1,0.1,-0.1, 0.1,0.1,-0.1, 0.1,0.1,-0.1, 0.1,0.1,-0.1, 0.1,0.1,0.1]
-    else:
-        robot.SetActiveDOFs(lHandDOFs)
-        dof = [0.1,0.1,-0.1, 0.1,0.1,-0.1, 0.1,0.1,-0.1, 0.1,0.1,-0.1, 0.1,0.1,0.1]
-    robot.SetActiveDOFValues(dof)
-    #raw_input('handopened')
-
-def closeHand(robot):
-    robot.SetActiveDOFs(rHandDOFs)
-    dof = [0.1,0.1,-1.5, 0.1,0.1,-1.5, 0.1,0.1,-1.5, 0.1,0.1,-1.5, 0.1,0.1,-1.4]
-    robot.SetActiveDOFValues(dof)
+useArm = 0
 
 def getHandInObject(env, robot, object, arm = 0):
     with env:
@@ -59,10 +38,10 @@ def attachHoseToHydrant(env, prob_cbirrt, robot, hydrant, hose):
     with env:
         hydrantInWorld = hydrant.GetTransform()
 
-    handInHose = getHandInObject(env, robot, hose, useArm)
+    #handInHose = getHandInObject(env, robot, hose, useArm)
     global mHoseInHydrant
     goalHoseInWorld = np.dot( hydrantInWorld, mHoseInHydrant )
-    goalHandInWorld = np.dot( goalHoseInWorld, handInHose )
+    #goalHandInWorld = np.dot( goalHoseInWorld, handInHose )
 
     Bw = mat([0.0, 0.0,
               0.0, 0.0,
@@ -93,11 +72,13 @@ def moveHandUp(env, basemanip, robot, dist, filename):
                                           execute=False,
                                           outputtraj=True,
                                           outputtrajobj=True)
-        planningutils.RetimeTrajectory(traj, False, 0.1, 0.1)
+        result=planningutils.RetimeTrajectory(traj, False, 0.1, 0.1)
 
-    writeToFile(filename,traj.serialize())
-    robot.GetController().SetPath(traj)
-    robot.WaitForController(0)
+    if result:
+        writeToFile(filename,traj.serialize())
+        robot.GetController().SetPath(traj)
+        robot.WaitForController(0)
+    return result
 
 def insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist):
     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
@@ -147,6 +128,7 @@ def moveCBiRRT(env, prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, armIndex):
     prob.run()
     if prob.solved:
         prob.playback()
+    return prob.solved
 
 
 def moveStraight(env, prob_manip, robot, filename, armIndex = 0):
@@ -164,9 +146,11 @@ def moveStraight(env, prob_manip, robot, filename, armIndex = 0):
         ikmodel.autogenerate()
 
     with robot:
-        resp = prob_manip.SendCommand('MoveHandStraight direction 0 0 1 maxdist 0.05 writetraj moveup.txt')
-    prob_manip.SendCommand('traj liftarmtraj.txt')
-    robot.WaitForController(0)
+        result = prob_manip.SendCommand('MoveHandStraight direction 0 0 1 maxdist 0.05 writetraj moveup.txt')
+    if result:
+        prob_manip.SendCommand('traj liftarmtraj.txt')
+        robot.WaitForController(0)
+    return result
 
 def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     global useArm
@@ -182,10 +166,7 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     else:
         graspInHose = mGraspInHoseRightHand
 
-    graspInWorld = np.dot(hoseInWorld, graspInHose)
-    #robot.GetManipulators()[useArm].GetEndEffector().SetTransform(graspInWorld)
-    #print graspInWorld
-    #raw_input("check")
+    #graspInWorld = np.dot(hoseInWorld, graspInHose)
 
     Bw = [0.0, 0.0,
           0.0, 0.0,
@@ -198,11 +179,14 @@ def graspHose(env, prob_cbirrt, basemanip, robot, hose):
     T0_w = comps.Transform(hoseInWorld[0:3,0:3], np.mat(hoseInWorld[0:3,3]).T)
     Tw_e = comps.Transform(graspInHose[0:3,0:3], np.mat(graspInHose[0:3,3]).T)
 
-    moveCBiRRT(env, prob_cbirrt, robot, 'grasphose.txt', T0_w, Tw_e, Bw, useArm)
-    robot.SetActiveManipulator(armName[useArm])
-    robot.Grab(hose)
-    objName = "hose"
-    prob_cbirrt.SendCommand('GrabBody name %s'%(objName))
+    result=moveCBiRRT(env, prob_cbirrt, robot, 'grasphose.txt', T0_w, Tw_e, Bw, useArm)
+
+    if result:
+        robot.SetActiveManipulator(armName[useArm])
+        robot.Grab(hose)
+        objName = "hose"
+        prob_cbirrt.SendCommand('GrabBody name %s'%(objName))
+    return result
 
 if __name__ == "__main__":
 
@@ -232,16 +216,15 @@ if __name__ == "__main__":
     env.LoadProblem(prob_manip,'huboplus')
 
     #grasp the hose
-    graspHose(env, prob_cbirrt, basemanip, robot, hose)
+    res = graspHose(env, prob_cbirrt, basemanip, robot, hose)
 
     #move up
-    moveHandUp(env, basemanip, robot, 0.05, 'moveup.txt')
+    res = moveHandUp(env, basemanip, robot, 0.05, 'moveup.txt') if res else res
 
     #move to the hydrant
-    attachHoseToHydrant(env, prob_cbirrt, robot, hydrant_vertical, hose)
+    res = attachHoseToHydrant(env, prob_cbirrt, robot, hydrant_vertical, hose) if res else res
 
     #insertion
     dist = 0.1
-    insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist)
+    res = insertHoseToHydrant(env, prob_cbirrt, basemanip, robot, dist) if res else res
 
-    time.sleep(1)

@@ -1,52 +1,10 @@
 from openhubo import comps
 import openhubo
 
-
-
-
-
-
-
-                
-        
-        
-        
-
-        
-
-
-
-
-
-
-        
-        
-        
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 from openravepy import RaveCreateProblem
 from numpy import pi
 import openravepy as rave
 import utilities_hao as hao
-
-
 
 (env,options)=openhubo.setup('qtcoin')
 options.scene='scenes/hoseexp1.env.xml'
@@ -96,6 +54,3 @@ hao.RunOpenRAVETraj(robot, planner.filename)
 robot.WaitForController(0)
 hao.RunOpenRAVETraj(robot, 'insert.txt')
 robot.WaitForController(0)
-
-
->>>>>>> partial updates to work with 0.7.1
