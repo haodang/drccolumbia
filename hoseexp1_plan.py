@@ -24,6 +24,12 @@ mHoseInHydrant = array([[ 1, 0,  0, 0],
 
 useArm = 0
 
+#FIXME: base this on some combo of grasp direction and palm coordinate system
+#comment if using Hubo+
+mGraspInHoseLeftHand=comps.Transform([pi,0,0])*mGraspInHoseLeftHand
+mGraspInHoseLeftHand[1,3]*=-1
+mHoseInHydrant=comps.Transform([0,0,pi])*mHoseInHydrant
+
 def getHandInObject(env, robot, object, arm = 0):
     with env:
         handInWorld = robot.GetManipulators()[arm].GetEndEffectorTransform()
@@ -107,6 +113,7 @@ def moveCBiRRT(prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, index):
     problem = comps.Cbirrt(prob_cbirrt,chain,filename)
     print problem.Serialize()
     problem.activate(robot)
+    print problem.Serialize()
     problem.run()
     problem.playback()
     while not robot.GetController().IsDone():
@@ -130,7 +137,7 @@ def graspHose(prob_cbirrt, basemanip, robot, hose, index):
           0, 0,
           0, 0,
           0, 0,
-          -.1, .1]
+          -.02, .02]
 
     #Transform of workspace wrt hose link (identity matrix)
     T0_w = comps.Transform(hose.GetTransform())
@@ -138,7 +145,13 @@ def graspHose(prob_cbirrt, basemanip, robot, hose, index):
     tsr=comps.TSR(T0_w,Tw_e,Bw,index)
     chain=comps.TSRChain(0,1,0,tsr=tsr)
     grasp_problem = comps.Cbirrt(prob_cbirrt,chain,'grasphose.traj')
-    print grasp_problem.Serialize()
+
+    pose=openhubo.Pose(robot)
+    pose.useregex=True
+    pose['.EP']=-pi/4
+    pose['LSR']=pi/4
+    pose['RSR']=pi/4
+    grasp_problem.set_ikguess_pose(pose=pose)
     grasp_problem.activate(robot)
     result=grasp_problem.run()
 
@@ -157,18 +170,20 @@ if __name__ == "__main__":
     options.scenefile='scenes/hoseexp1.env.xml'
 
     [robot,ctrl,ind,ghost,recorder]=openhubo.load_scene(env,options)
-    env.SetDebugLevel(4)
+    env.SetDebugLevel(5)
 
     # initialization boilerplate
     print "Setup goals and transforms"
     hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
     hydrant_vertical = env.GetKinBody('hydrant_vertical')
     hose = env.GetKinBody('hose')
-    hose.Enable(0)
+    #hose.Enable(False)
 
     #Use new pose class to simplify initial pose
-    pose = openhubo.Pose(robot)
-    pose.reset()
+    #pose = openhubo.Pose(robot)
+    #pose.useregex=True
+    #pose['.EP']=-pi/4
+    #pose.send()
 
     basemanip = interfaces.BaseManipulation(robot)
 
@@ -177,6 +192,12 @@ if __name__ == "__main__":
 
     prob_manip = RaveCreateProblem(env,'Manipulation')
     env.LoadProblem(prob_manip,robot.GetName())
+
+    #Set up grap coordinate system
+    manip = robot.GetManipulators()[useArm]
+    direction = manip.GetDirection()
+
+    #hack to get DRC Hubo left hand oriented correctly.
 
     #grasp the hose
     res,grasp_problem = graspHose(prob_cbirrt, basemanip, robot, hose, useArm)
