@@ -8,6 +8,7 @@ lowerBodyDOFs = [0,1,2,3,4,5,6,7,8,9,10,11,12]
 def helloWorld():
     print "hello world"
 
+#TODO: refer to stock function
 def read_youngbum_traj(filename,robot,dt=.01,scale=1.0):
     """ Read in trajectory data stored in Youngbum's format (100Hz data):
         HPY LHY LHR ... RWP   (3-letter names)
