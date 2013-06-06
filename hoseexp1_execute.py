@@ -1,110 +1,45 @@
-from openravepy import *
-from TransformMatrix import *
-from TSR import *
-from str2num import *
-from rodrigues import *
-import time
-import numpy
-import pdb
+from openhubo import comps
 import openhubo
-from openhubo import pause
-from utilities_hao import *
+import time
 
-if __name__ == "__main__":
+from openravepy import RaveCreateProblem
+from numpy import pi
+import openravepy as rave
+import utilities_hao as hao
 
-    try:
+#match to planner
+#TODO: store this in a config file of some sort...
+from hoseexp1_plan import useArm
 
-        #initialization
-        env = Environment()
-        env.SetViewer('qtcoin')
-        #we do not want to print out too many warning messages
-        env.SetDebugLevel(DebugLevel.Debug)
-        time.sleep(0.25)
+(env,options)=openhubo.setup('qtcoin')
+options.scenefile='scenes/hoseexp1.env.xml'
+if options.physics is None:
+    options.physics=True
 
-        timestep = 0.0002
-        with env:
-            #load from an xml file
-            env.StopSimulation()
-            env.Load('hoseexp1_physics.env.xml')
-            time.sleep(0.25)
+[robot,ctrl,ind,ghost,recorder]=openhubo.load_scene(env,options)
+#initialization
+hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
+hydrant_vertical = env.GetKinBody('hydrant_vertical')
+hose = env.GetKinBody('hose')
+hose.Enable(False)
 
-            hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
-            hydrant_vertical = env.GetKinBody('hydrant_vertical')
-            hose = env.GetKinBody('hose')
-            robot = env.GetRobot('drchubo')
+basemanip = rave.interfaces.BaseManipulation(robot)
+prob_manip = RaveCreateProblem(env,'Manipulation')
+env.LoadProblem(prob_manip,robot.GetName())
 
-            #initialize the servo controller
-            controller=RaveCreateController(env,'trajectorycontroller')
-            robot.SetController(controller)
+env.StartSimulation(openhubo.TIMESTEP)
 
-            #collision checking system
-            #bullet = RaveCreateCollisionChecker(env,'bullet')
-            #Rob: change to pqp from ode because
-            ode = RaveCreateCollisionChecker(env,'pqp')
-            env.SetCollisionChecker(ode)
+hao.RunOpenRAVETraj(robot, 'grasphose.traj')
 
-            #basemanipulation interface
-            #basemanip = interfaces.BaseManipulation(robot)
+robot.SetActiveManipulator(robot.GetManipulators()[useArm])
+robot.Grab(hose)
+hose.Enable(True)
+hao.closeHand(robot,useArm,pi/4)
+time.sleep(3)
 
-            #create problem instances
-            prob_cbirrt = RaveCreateProblem(env,'CBiRRT')
-            env.LoadProblem(prob_cbirrt,'drchubo')
-
-            #prob_manip = RaveCreateProblem(env,'Manipulation')
-            #env.LoadProblem(prob_manip,'huboplus')
-
-            #Set an initial pose before the simulation starts
-            ind = openhubo.makeNameToIndexConverter(robot)
-            robot.SetDOFValues([pi/8,-pi/8],[ind('LSR'),ind('RSR')])
-            controller.SendCommand('set gains 10 1 5 .9998 .1')
-
-            #Use the new SetDesired command to set a whole pose at once.
-            pose=array(zeros(60))
-            #Manually align the goal pose and the initial pose so the thumbs clear
-            pose[ind('RSR')]=-pi/2
-            pose[ind('LSR')]=pi/2
-            controller.SetDesired(pose)
-
-            env.StartSimulation(timestep=timestep)
-
-        recorder = RaveCreateModule(env,'viewerrecorder')
-        env.AddModule(recorder,'')
-        filename = 'hoseexp1_execute.mpg'
-        codec = 13 # mpeg2
-        recorder.SendCommand('Start 640 480 15 codec %d timing realtime filename %s\nviewer %s'%(codec,filename,env.GetViewer().GetName()))
-
-        raw_input('wait until the initial pose is achieved and click enter (why should we wait here?)')
-
-
-        planner = Cbirrt(prob_cbirrt)
-        planner.filename='grasphose.txt'
-        #RunTrajectoryFromFile(robot, planner)
-        RunOpenRAVETraj(robot, planner.filename)
-        #printOutJoints(robot)
-        raw_input('wait until trajector is done and click enter')
-
-        #we need to change the time step to get fine simulation results
-        #ode could crash if the timestep is too big
-        env.StopSimulation()
-        env.StartSimulation(0.00015)
-        CloseLeftHand(robot,pi)
-        env.StopSimulation()
-        env.StartSimulation(timestep)
-
-        robot.SetActiveManipulator('rightArm')
-        robot.Grab(hose)
-
-        RunOpenRAVETraj(robot, 'moveup.txt')
-        raw_input('wait until trajector is done and click enter')
-        planner.filename='attachhose.txt'
-
-        RunOpenRAVETraj(robot, planner.filename)
-        raw_input('wait until trajector is done and click enter')
-        RunOpenRAVETraj(robot, 'insert.txt')
-        raw_input('wait until trajector is done and click enter')
-        #printOutJoints(robot)
-
-        raw_input('enter to exit')
-        recorder.SendCommand('Stop')
-    finally:
-        env.Destroy()
+hao.RunOpenRAVETraj(robot, 'moveup.traj')
+robot.WaitForController(0)
+hao.RunOpenRAVETraj(robot, 'attachhose.traj')
+robot.WaitForController(0)
+hao.RunOpenRAVETraj(robot, 'insert.traj')
+robot.WaitForController(0)

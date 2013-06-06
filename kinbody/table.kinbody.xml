@@ -1,5 +1,7 @@
 <!-- Table is 1.83m long, 0.61m wide, .035m thick -->
 <KinBody name="table">
+
+    <modelsdir>models</modelsdir>
   <Body name="table" type="dynamic">
     <Geom type="box">
        <extents>1.3 0.305 0.02</extents>

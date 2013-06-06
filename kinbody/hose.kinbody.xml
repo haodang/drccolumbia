@@ -1,4 +1,5 @@
 <KinBody name="hose">
+    <modelsdir>models</modelsdir>
   <Body name="hose" type="static">
     <Geom type="cylinder">
       <rotationaxis>1 0 0 90</rotationaxis>
