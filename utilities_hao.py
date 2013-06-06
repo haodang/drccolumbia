@@ -125,9 +125,8 @@ def RunOpenRAVETraj(robot, filename):
 
     controller = robot.GetController()
     controller.SetPath(traj)
-    controller.SendCommand('start')
-    robot.WaitForController(0)
 
+    robot.WaitForController(0)
 
     while(controller.IsDone() == False):
         time.sleep(0.01)
@@ -271,10 +270,10 @@ def writeToFile(filename, string):
     f.write(string)
     f.close()
 
-def openHand(robot, index = 1):
+def openHand(robot, index):
     return hands.open_huboplus_hand(robot,index)
 
-def closeHand(robot,angle=pi/2):
-    return hands.close_huboplus_hand(robot,angle)
+def closeHand(robot, index, angle=pi/2):
+    return hands.close_huboplus_hand(robot,index,angle)
 
 

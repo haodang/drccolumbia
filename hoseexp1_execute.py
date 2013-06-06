@@ -6,9 +6,14 @@ from numpy import pi
 import openravepy as rave
 import utilities_hao as hao
 
+#match to planner
+#TODO: store this in a config file of some sort...
+from hoseexp1_plan import useArm
+
 (env,options)=openhubo.setup('qtcoin')
-options.scene='scenes/hoseexp1.env.xml'
-options.robot=None
+options.scenefile='scenes/hoseexp1.env.xml'
+if options.physics is None:
+    options.physics=True
 
 [robot,ctrl,ind,ghost,recorder]=openhubo.load_scene(env,options)
 #initialization
@@ -18,13 +23,7 @@ hose = env.GetKinBody('hose')
 
 basemanip = rave.interfaces.BaseManipulation(robot)
 prob_manip = RaveCreateProblem(env,'Manipulation')
-env.LoadProblem(prob_manip,'huboplus')
-
-hao.setToInit(basemanip, robot)
-
-#create problem instances
-prob_cbirrt = RaveCreateProblem(env,'CBiRRT')
-env.LoadProblem(prob_cbirrt,'huboplus')
+env.LoadProblem(prob_manip,robot.GetName())
 
 env.StartSimulation(openhubo.TIMESTEP)
 
@@ -32,25 +31,19 @@ pose=openhubo.Pose(robot,ctrl)
 pose['LSR']=(90-15)*pi/180
 pose['RSR']=-pose['LSR']
 pose.send()
+#TODO: plan motion function
 
-planner = comps.Cbirrt(prob_cbirrt)
-planner.filename='grasphose.txt'
-
-hao.RunOpenRAVETraj(robot, planner.filename)
+hao.RunOpenRAVETraj(robot, 'grasphose.traj')
 
 if openhubo.check_physics(env):
-    hao.CloseLeftHand(robot,pi)
+    hao.closeHand(robot,useArm,pi/8)
+else:
+    robot.SetActiveManipulator(robot.GetManipulators()[useArm])
+    robot.Grab(hose)
 
-robot.SetActiveManipulator(hao.activeArm) #'rightArm'/'leftArm'
-robot.Grab(hose)
-
-hao.RunOpenRAVETraj(robot, 'moveup.txt')
-
+hao.RunOpenRAVETraj(robot, 'moveup.traj')
 robot.WaitForController(0)
-planner.filename='attachhose.txt'
-
-hao.RunOpenRAVETraj(robot, planner.filename)
-
+hao.RunOpenRAVETraj(robot, 'attachhose.traj')
 robot.WaitForController(0)
-hao.RunOpenRAVETraj(robot, 'insert.txt')
+hao.RunOpenRAVETraj(robot, 'insert.traj')
 robot.WaitForController(0)

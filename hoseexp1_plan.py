@@ -48,11 +48,11 @@ def attachHoseToHydrant(prob_cbirrt, robot, hydrant, hose):
           0, 0,
           0, 0,
           -np.pi, np.pi]
-    graspInHose = getHandInObject(env, robot, hose, useArm)
+    graspInHose = getHandInObject(env,robot, hose, useArm)
     T0_w = comps.Transform(goalHoseInWorld)
     Tw_e = comps.Transform(graspInHose)
 
-    moveCBiRRT(prob_cbirrt, robot, 'attachhose.traj', T0_w, Tw_e, Bw, useArm)
+    return moveCBiRRT(prob_cbirrt, robot, 'attachhose.traj', T0_w, Tw_e, Bw, useArm)
 
 def moveHandUp(env, basemanip, robot, dist, filename):
     ikmodel = databases.inversekinematics.InverseKinematicsModel(robot=robot,
@@ -69,7 +69,6 @@ def moveHandUp(env, basemanip, robot, dist, filename):
                                           minsteps=1,
                                           maxsteps=dist/stepsize,
                                           execute=False,
-                                          outputtraj=True,
                                           outputtrajobj=True)
         result=planningutils.RetimeTrajectory(traj, False, 0.1, 0.1)
 
@@ -94,8 +93,7 @@ def insertHoseToHydrant(prob_cbirrt, basemanip, robot, dist):
                                           minsteps=1,
                                           maxsteps=dist/stepsize,
                                           execute=False,
-                                          outputtraj=True,
-                                          outputtrajobj='insert.traj')
+                                          outputtrajobj=True)
         planningutils.RetimeTrajectory(traj, False, 0.1,0.1)
 
     writeToFile('insert.traj',traj.serialize())
@@ -106,7 +104,7 @@ def moveCBiRRT(prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, index):
 
     tsr=comps.TSR(T0_w,Tw_e,Bw,index)
     chain=comps.TSRChain(0,1,0,tsr=tsr)
-    problem = comps.Cbirrt(prob_cbirrt,chain,'grasphose.traj')
+    problem = comps.Cbirrt(prob_cbirrt,chain,filename)
     print problem.Serialize()
     problem.activate(robot)
     problem.run()
