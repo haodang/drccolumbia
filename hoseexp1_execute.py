@@ -1,5 +1,6 @@
 from openhubo import comps
 import openhubo
+import time
 
 from openravepy import RaveCreateProblem
 from numpy import pi
@@ -20,6 +21,7 @@ if options.physics is None:
 hydrant_horizontal = env.GetKinBody('hydrant_horizontal')
 hydrant_vertical = env.GetKinBody('hydrant_vertical')
 hose = env.GetKinBody('hose')
+hose.Enable(False)
 
 basemanip = rave.interfaces.BaseManipulation(robot)
 prob_manip = RaveCreateProblem(env,'Manipulation')
@@ -27,19 +29,13 @@ env.LoadProblem(prob_manip,robot.GetName())
 
 env.StartSimulation(openhubo.TIMESTEP)
 
-pose=openhubo.Pose(robot,ctrl)
-pose['LSR']=(90-15)*pi/180
-pose['RSR']=-pose['LSR']
-pose.send()
-#TODO: plan motion function
-
 hao.RunOpenRAVETraj(robot, 'grasphose.traj')
 
-if openhubo.check_physics(env):
-    hao.closeHand(robot,useArm,pi/8)
-else:
-    robot.SetActiveManipulator(robot.GetManipulators()[useArm])
-    robot.Grab(hose)
+robot.SetActiveManipulator(robot.GetManipulators()[useArm])
+robot.Grab(hose)
+hose.Enable(True)
+hao.closeHand(robot,useArm,pi/4)
+time.sleep(3)
 
 hao.RunOpenRAVETraj(robot, 'moveup.traj')
 robot.WaitForController(0)
