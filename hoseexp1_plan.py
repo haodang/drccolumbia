@@ -28,7 +28,7 @@ useArm = 0
 #comment if using Hubo+
 mGraspInHoseLeftHand=comps.Transform([pi,0,0])*mGraspInHoseLeftHand
 mGraspInHoseLeftHand[1,3]*=-1
-mHoseInHydrant=comps.Transform([0,0,pi])*mHoseInHydrant
+#mHoseInHydrant=comps.Transform([0,0,pi])*mHoseInHydrant
 
 def getHandInObject(env, robot, object, arm = 0):
     with env:
@@ -53,7 +53,7 @@ def attachHoseToHydrant(prob_cbirrt, robot, hydrant, hose):
           0.0, 0.0,
           0, 0,
           0, 0,
-          -np.pi, np.pi]
+          -np.pi/6, np.pi/6]
     graspInHose = getHandInObject(env,robot, hose, useArm)
     T0_w = comps.Transform(goalHoseInWorld)
     Tw_e = comps.Transform(graspInHose)
@@ -132,6 +132,7 @@ def graspHose(prob_cbirrt, basemanip, robot, hose, index):
     else:
         graspInHose = mGraspInHoseRightHand
 
+    #flexibility of the grasp
     Bw = [0.0, 0.0,
           0.0, 0.0,
           0, 0,
