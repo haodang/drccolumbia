@@ -5,6 +5,7 @@ import openhubo
 from openhubo import comps,trajectory
 from openravepy import databases,planningutils,IkParameterization,interfaces,RaveCreateProblem
 from utilities_hao import writeToFile
+from openhubo.trajectory import *
 
 mGraspInHoseRightHand = array([[ 1, 0,  0, 0],
                                [ 0, 1,  0, -0.025],
@@ -114,6 +115,8 @@ def moveCBiRRT(prob_cbirrt, robot, filename, T0_w, Tw_e, Bw, index):
     print problem.Serialize()
     problem.activate(robot)
     print problem.Serialize()
+    #Use better smoothing to get a cleaner trajectory
+    prob_cbirrt.smoothing = 35
     problem.run()
     problem.playback()
     while not robot.GetController().IsDone():
@@ -146,7 +149,6 @@ def graspHose(prob_cbirrt, basemanip, robot, hose, index):
     tsr=comps.TSR(T0_w,Tw_e,Bw,index)
     chain=comps.TSRChain(0,1,0,tsr=tsr)
     grasp_problem = comps.Cbirrt(prob_cbirrt,chain,'grasphose.traj')
-
     pose=openhubo.Pose(robot)
     pose.useregex=True
     pose['.EP']=-pi/4
@@ -154,8 +156,9 @@ def graspHose(prob_cbirrt, basemanip, robot, hose, index):
     pose['RSR']=pi/4
     grasp_problem.set_ikguess_pose(pose=pose)
     grasp_problem.activate(robot)
+    prob_cbirrt.smoothing = 35
     result=grasp_problem.run()
-
+    
     if result:
         grasp_problem.playback()
         while not robot.GetController().IsDone():
@@ -213,3 +216,8 @@ if __name__ == "__main__":
     dist = 0.1
     res = insertHoseToHydrant(prob_cbirrt, basemanip, robot, dist) if res else res
 
+
+    #convert openhubo trajectory into huboAch trajectory
+    [traj,config] = create_trajectory(robot)
+    read_trajectory_from_file(traj, 'grasphose.traj')
+    write_hubo_traj(traj, robot, 1/200, 'test.traj')
