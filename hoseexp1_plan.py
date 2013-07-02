@@ -27,8 +27,8 @@ useArm = 0
 
 #FIXME: base this on some combo of grasp direction and palm coordinate system
 #comment if using Hubo+
-mGraspInHoseLeftHand=comps.Transform([pi,0,0])*mGraspInHoseLeftHand
-mGraspInHoseLeftHand[1,3]*=-1
+#mGraspInHoseLeftHand=comps.Transform([pi,0,0])*mGraspInHoseLeftHand
+#mGraspInHoseLeftHand[1,3]*=-1
 #mHoseInHydrant=comps.Transform([0,0,pi])*mHoseInHydrant
 
 def getHandInObject(env, robot, object, arm = 0):
