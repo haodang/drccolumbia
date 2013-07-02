@@ -152,6 +152,10 @@ def graspHose(prob_cbirrt, basemanip, robot, hose, index):
 
     pose=openhubo.Pose(robot)
     pose.useregex=True
+    #Might need to change -- reseting pose
+    pose['LF.1']=-pi/6
+    pose.send()
+     
     pose['.EP']=-pi/4
     pose['LSR']=pi/4
     pose['RSR']=pi/4
