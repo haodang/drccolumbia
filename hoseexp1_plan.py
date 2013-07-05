@@ -220,4 +220,4 @@ if __name__ == "__main__":
     dist = 0.1
     res = insertHoseToHydrant(prob_cbirrt, basemanip, robot, dist) if res else res
 
-    convert_openrave_to_hubo_traj(robot,'grasphose.traj','grasphose.hubo.traj',0.005)
+    convert_openrave_to_hubo_traj(robot,'grasphose.traj','grasphose.hubo.traj',0.04)
